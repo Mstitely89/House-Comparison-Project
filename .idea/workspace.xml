@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15c288f7-9ac3-432c-9eaf-16f805ae7ee6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/House Comparison Project.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/House.java" afterDir="false" />
-    </list>
+    <list default="true" id="15c288f7-9ac3-432c-9eaf-16f805ae7ee6" name="Changes" comment="First Part Upload, still not quite working yet...javafx issues" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -63,6 +54,14 @@
       <option name="presentableId" value="Default" />
       <updated>1683210455679</updated>
     </task>
+    <task id="LOCAL-00001" summary="First Part Upload, still not quite working yet...javafx issues">
+      <created>1683214193864</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1683214193864</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -75,6 +74,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="First Part Upload, still not quite working yet...javafx issues" />
+    <option name="LAST_COMMIT_MESSAGE" value="First Part Upload, still not quite working yet...javafx issues" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/House_Comparison_Project$HouseComparison.ic" NAME="HouseComparison Coverage Results" MODIFIED="1683213656130" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
