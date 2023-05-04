@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="15c288f7-9ac3-432c-9eaf-16f805ae7ee6" name="Changes" comment="First Part Upload, still not quite working yet...javafx issues" />
+    <list default="true" id="15c288f7-9ac3-432c-9eaf-16f805ae7ee6" name="Changes" comment="First Part Upload, still not quite working yet...javafx issues">
+      <change beforePath="$PROJECT_DIR$/src/HouseComparison.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/HouseComparison.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -61,7 +63,14 @@
       <option name="project" value="LOCAL" />
       <updated>1683214193864</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="First Part Upload, still not quite working yet...javafx issues">
+      <created>1683214658200</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1683214658200</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
