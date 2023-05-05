@@ -1,7 +1,7 @@
 import javafx.application.Application;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+//import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -13,14 +13,13 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class HouseComparison extends Application {
 
-    private static ObservableList<DwellingInfo> dwellings = FXCollections.observableArrayList();
+    private static Deque<DwellingInfo> dwellingsDeque = new LinkedList<>();
 
-    // Define the loadHouses()
+    // Define loadHouses()
     private static void loadHouses() {
         File file = new File("dwellings.txt");
 
@@ -40,9 +39,9 @@ public class HouseComparison extends Application {
                         double bathrooms = Double.parseDouble(parts[4]);
 
                         if (dwellingType.equalsIgnoreCase("House")) {
-                            dwellings.add(new House(address, priceOrRent, bedrooms, bathrooms));
+                            dwellingsDeque.add(new House(address, priceOrRent, bedrooms, bathrooms));
                         } else if (dwellingType.equalsIgnoreCase("Apartment")) {
-                            dwellings.add(new Apartment(address, priceOrRent, bedrooms, bathrooms));
+                            dwellingsDeque.add(new Apartment(address, priceOrRent, bedrooms, bathrooms));
                         }
                     } catch (NumberFormatException e) {
                         System.err.println("Invalid number format on line " + lineNumber + ": " + e.getMessage());
@@ -57,11 +56,11 @@ public class HouseComparison extends Application {
         }
     }
 
-    // Define the saveHouses()
+    // Define saveHouses()
     private void saveHouses() {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter("dwellings.txt"));
-            for (DwellingInfo dwelling : dwellings) {
+            for (DwellingInfo dwelling : dwellingsDeque) {
                 String dwellingType = dwelling instanceof House ? "House" : "Apartment";
                 String line = dwellingType + "," + dwelling.getAddress() + "," + dwelling.getPriceOrRent() + "," + dwelling.getBedrooms() + "," + dwelling.getBathrooms();
                 writer.write(line);
@@ -90,7 +89,7 @@ public class HouseComparison extends Application {
             dialog.close();
         });
 
-        HBox hbox = new HBox(10, houseButton, apartmentButton);
+        HBox hbox = new HBox(150, houseButton, apartmentButton);
         hbox.setAlignment(Pos.CENTER);
         hbox.setPadding(new Insets(20));
 
@@ -100,6 +99,7 @@ public class HouseComparison extends Application {
         dialog.showAndWait();
     }
 
+    // Code for adding apartments
     private void showApartmentDialog(TableView<DwellingInfo> table, Apartment apartment) {
         Stage dialog = new Stage();
         dialog.setTitle(apartment == null ? "Add Apartment" : "Edit Apartment");
@@ -150,7 +150,7 @@ public class HouseComparison extends Application {
                 double bathrooms = Double.parseDouble(bathroomsText);
 
                 if (apartment == null) {
-                    dwellings.add(new Apartment(address, rent, bedrooms, bathrooms));
+                    dwellingsDeque.add(new Apartment(address, rent, bedrooms, bathrooms));
                 } else {
                     apartment.setAddress(address);
                     apartment.setRent(rent);
@@ -159,7 +159,7 @@ public class HouseComparison extends Application {
                 }
 
                 saveHouses();
-                quickSort(dwellings, 0, dwellings.size() - 1);
+                quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
                 table.refresh();
                 dialog.close();
             }
@@ -174,6 +174,7 @@ public class HouseComparison extends Application {
         dialog.showAndWait();
     }
 
+    //Code for adding houses
     private void showHouseDialog(TableView<DwellingInfo> table, House house) {
         Stage dialog = new Stage();
         dialog.setTitle(house == null ? "Add House" : "Edit House");
@@ -224,7 +225,7 @@ public class HouseComparison extends Application {
                 double bathrooms = Double.parseDouble(bathroomsText);
 
                 if (house == null) {
-                    dwellings.add(new House(address, price, bedrooms, bathrooms));
+                    dwellingsDeque.add(new House(address, price, bedrooms, bathrooms));
                 } else {
                     house.setAddress(address);
                     house.setPrice(price);
@@ -233,7 +234,7 @@ public class HouseComparison extends Application {
                 }
 
                 saveHouses();
-                quickSort(dwellings, 0, dwellings.size() - 1);
+                quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
                 table.refresh();
                 dialog.close();
             }
@@ -248,35 +249,54 @@ public class HouseComparison extends Application {
         dialog.showAndWait();
     }
 
-    private static void quickSort(List<DwellingInfo> dwellings, int low, int high) {
+    // Implementation of quickSort which has an average time complexity O(nlogn)
+    private static void quickSort(Deque<DwellingInfo> dwellingsDeque, int low, int high) {
         if (low < high) {
-            int pivotIndex = partition(dwellings, low, high);
-            quickSort(dwellings, low, pivotIndex - 1);
-            quickSort(dwellings, pivotIndex + 1, high);
+            int pi = partition(dwellingsDeque, low, high);
+
+            quickSort(dwellingsDeque, low, pi - 1);
+            quickSort(dwellingsDeque, pi + 1, high);
         }
     }
 
-    private static int partition(List<DwellingInfo> dwellings, int low, int high) {
-        DwellingInfo pivot = dwellings.get(high);
-        int i = low - 1;
+    private static int partition(Deque<DwellingInfo> dwellings, int low, int high) {
+        DwellingInfo[] dwellingsArray = dwellings.toArray(new DwellingInfo[dwellings.size()]);
+        DwellingInfo pivot = dwellingsArray[high];
+        int i = (low - 1);
 
-        for (int j = low; j < high; j++) {
-            if (dwellings.get(j).getPriceOrRent() < pivot.getPriceOrRent()) {
+        for (int j = low; j <= high - 1; j++) {
+            if (dwellingsArray[j].getPriceOrRent() < pivot.getPriceOrRent()) {
                 i++;
-                Collections.swap(dwellings, i, j);
+                DwellingInfo temp = dwellingsArray[i];
+                dwellingsArray[i] = dwellingsArray[j];
+                dwellingsArray[j] = temp;
             }
         }
-        Collections.swap(dwellings, i + 1, high);
+
+        DwellingInfo temp = dwellingsArray[i + 1];
+        dwellingsArray[i + 1] = dwellingsArray[high];
+        dwellingsArray[high] = temp;
+
+        // Update the Deque with the modified order
+        dwellings.clear();
+        for (DwellingInfo dwelling : dwellingsArray) {
+            dwellings.add(dwelling);
+        }
 
         return i + 1;
+    }
+
+    public static void main(String[] args) {
+        loadHouses();
+        launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         loadHouses();
-        quickSort(dwellings, 0, dwellings.size() - 1);
+        quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
 
-        TableView<DwellingInfo> table = new TableView<>(dwellings);
+        TableView<DwellingInfo> table = new TableView<>(FXCollections.observableList(new ArrayList<>(dwellingsDeque)));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<DwellingInfo, String> addressColumn = new TableColumn<>("Address");
@@ -307,7 +327,10 @@ public class HouseComparison extends Application {
         table.getColumns().addAll(addressColumn, priceColumn, rentColumn, bedroomsColumn, bathroomsColumn);
 
         Button addButton = new Button("Add");
-        addButton.setOnAction(event -> showDwellingTypeSelectionDialog(table));
+        addButton.setOnAction(event -> {
+            showDwellingTypeSelectionDialog(table);
+            table.setItems(FXCollections.observableList(new ArrayList<>(dwellingsDeque))); // Update the table items
+        });
 
         Button editButton = new Button("Edit");
         editButton.setOnAction(event -> {
@@ -325,9 +348,10 @@ public class HouseComparison extends Application {
         deleteButton.setOnAction(event -> {
             DwellingInfo selectedDwelling = table.getSelectionModel().getSelectedItem();
             if (selectedDwelling != null) {
-                dwellings.remove(selectedDwelling);
+                dwellingsDeque.remove(selectedDwelling);
                 saveHouses();
-                quickSort(dwellings, 0, dwellings.size() - 1);
+                quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
+                table.setItems(FXCollections.observableList(new ArrayList<>(dwellingsDeque))); // Update the table items
             }
         });
 
@@ -341,10 +365,12 @@ public class HouseComparison extends Application {
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("House Comparison");
+        primaryStage.setOnCloseRequest(event -> {
+            saveHouses();
+            System.exit(0);
+        });
         primaryStage.show();
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+
 }
