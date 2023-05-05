@@ -1,51 +1,27 @@
-public class House {
+import javafx.beans.property.*;
 
-    private String address;
-    private int price;
-    private int bedrooms;
-    private int bathrooms;
+public class House extends DwellingInfo {
+    private final DoubleProperty price;
 
-    public House(String address, int price, int bedrooms, int bathrooms) {
-        this.address = address;
-        this.price = price;
-        this.bedrooms = bedrooms;
-        this.bathrooms = bathrooms;
+    public House(String address, double price, int bedrooms, double bathrooms) {
+        super(address, bedrooms, bathrooms);
+        this.price = new SimpleDoubleProperty(price);
     }
 
-    public String getAddress() {
-        return address;
+    public double getPrice() {
+        return price.get();
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setPrice(double price) {
+        this.price.set(price);
     }
 
-    public int getPrice() {
+    public DoubleProperty priceProperty() {
         return price;
     }
 
-    public void setPrice(int price) {
-        this.price = price;
-    }
-
-    public int getBedrooms() {
-        return bedrooms;
-    }
-
-    public void setBedrooms(int bedrooms) {
-        this.bedrooms = bedrooms;
-    }
-
-    public int getBathrooms() {
-        return bathrooms;
-    }
-
-    public void setBathrooms(int bathrooms) {
-        this.bathrooms = bathrooms;
-    }
-
     @Override
-    public String toString() {
-        return address;
+    public double getPriceOrRent() {
+        return getPrice();
     }
 }
