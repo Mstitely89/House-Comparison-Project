@@ -1,0 +1,2 @@
+House,123 West Main,545000.0,5,5.0
+House,456 East Main,561236.0,3,3.5
