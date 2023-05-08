@@ -1,7 +1,7 @@
 // **********************************************************************************
 // Title: House Comparison Tool
 // Author: Matt Stitely
-// Course Section: CMIS201-ONL1 (Seidel) Spring 2023
+// Course Section: CMIS202-ONL1 (Seidel) Spring 2023
 // Description: A simple to use tool that allows the user to enter multiple
 // houses/apartments and gives the ability to compare and filter them.
 // **********************************************************************************
