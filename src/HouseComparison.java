@@ -6,12 +6,9 @@
 // houses/apartments and gives the ability to compare and filter them.
 // **********************************************************************************
 
-
 import javafx.application.Application;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.collections.FXCollections;
-import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -26,14 +23,15 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Predicate;
 
 public class HouseComparison extends Application {
 
     private static Deque<DwellingInfo> dwellingsDeque = new LinkedList<>();
     private static BinarySearchTree bst = new BinarySearchTree();
+    private static DwellingHashTable dwellingHashTable = new DwellingHashTable();
     private static ExecutorService executorService = Executors.newFixedThreadPool(2);
     private static final Object lock = new Object();
 
@@ -76,7 +74,6 @@ public class HouseComparison extends Application {
                 lineNumber++;
             }
 
-            // Update the main variables within a synchronized block
             synchronized (lock) {
                 dwellingsDeque = tempDwellingsDeque;
                 bst = tempBst;
@@ -189,19 +186,37 @@ public class HouseComparison extends Application {
                 int bedrooms = Integer.parseInt(bedroomsText);
                 double bathrooms = Double.parseDouble(bathroomsText);
 
-                if (apartment == null) {
-                    Apartment newApartment = new Apartment(address, rent, bedrooms, bathrooms);
-                    dwellingsDeque.add(newApartment);
-                    bst.insert(newApartment);
+                if (apartment == null && dwellingHashTable.contains(address)) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Duplicate (or null) address: " + address);
+                    alert.showAndWait();
                 } else {
-                    apartment.setAddress(address);
-                    apartment.setRent(rent);
-                    apartment.setBedrooms(bedrooms);
-                    apartment.setBathrooms(bathrooms);
-                }
+                    if (apartment == null) {
+                        if (dwellingHashTable.contains(address)) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Duplicate address: " + address);
+                            alert.showAndWait();
+                            return;
+                        }
 
-                saveHouses();
-                updateTableData(table); // Update the table data
+                        Apartment newApartment = new Apartment(address, rent, bedrooms, bathrooms);
+                        dwellingsDeque.add(newApartment);
+                        bst.insert(newApartment);
+                        dwellingHashTable.insert(newApartment);
+                    } else {
+                        if (!apartment.getAddress().equals(address) && dwellingHashTable.contains(address)) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Duplicate address: " + address);
+                            alert.showAndWait();
+                            return;
+                        }
+                        apartment.setAddress(address);
+                        apartment.setRent(rent);
+                        apartment.setBedrooms(bedrooms);
+                        apartment.setBathrooms(bathrooms);
+                    }
+
+
+                    saveHouses();
+                    updateTableData(table);
+                }
                 dialog.close();
             }
         });
@@ -267,19 +282,41 @@ public class HouseComparison extends Application {
                 int bedrooms = Integer.parseInt(bedroomsText);
                 double bathrooms = Double.parseDouble(bathroomsText);
 
-                if (house == null) {
-                    dwellingsDeque.add(new House(address, price, bedrooms, bathrooms));
+                if (house == null && dwellingHashTable.contains(address)) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Duplicate (or null) address: " + address);
+                    alert.showAndWait();
                 } else {
-                    house.setAddress(address);
-                    house.setPrice(price);
-                    house.setBedrooms(bedrooms);
-                    house.setBathrooms(bathrooms);
+                    if (house == null) {
+                        if (dwellingHashTable.contains(address)) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Duplicate address: " + address);
+                            alert.showAndWait();
+                            return;
+                        }
+
+                        House newHouse = new House(address, price, bedrooms, bathrooms);
+                        dwellingsDeque.add(newHouse);
+                        bst.insert(newHouse);
+                        dwellingHashTable.insert(newHouse);
+                    } else {
+                        if (!house.getAddress().equals(address) && dwellingHashTable.contains(address)) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR, "Duplicate address: " + address);
+                            alert.showAndWait();
+                            return;
+                        }
+
+                        house.setAddress(address);
+                        house.setPrice(price);
+                        house.setBedrooms(bedrooms);
+                        house.setBathrooms(bathrooms);
+                    }
+
                 }
 
-                saveHouses();
-                quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
-                updateTableData(table); // Update the table data
-                dialog.close();
+                    saveHouses();
+                    quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
+                    updateTableData(table);
+                    dialog.close();
+
             }
         });
 
@@ -292,9 +329,7 @@ public class HouseComparison extends Application {
         dialog.showAndWait();
     }
 
-
-
-                // Implementation of quickSort which has an average time complexity O(nlogn)
+    // Implementation of quickSort which has an average time complexity O(nlogn)
     private static void quickSort(Deque<DwellingInfo> dwellingsDeque, int low, int high) {
         if (low < high) {
             int pi = partition(dwellingsDeque, low, high);
@@ -338,7 +373,6 @@ public class HouseComparison extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        //loadHouses();
         quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
 
         TableView<DwellingInfo> table = new TableView<>(FXCollections.observableList(new ArrayList<>(dwellingsDeque)));
@@ -402,24 +436,32 @@ public class HouseComparison extends Application {
                         dwellingsDeque.remove(selectedDwelling);
                         saveHouses();
                         quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
-                        updateTableData(table); // Update the table items
+                        updateTableData(table);
                     }
                 });
 
         filterButton.setOnAction(event -> {
-            double priceFilter = Double.parseDouble(priceFilterTextField.getText());
-            double bathroomsFilter = Double.parseDouble(bathroomsFilterTextField.getText());
-            int bedroomsFilter = Integer.parseInt(bedroomsFilterTextField.getText());
+            String priceFilterText = priceFilterTextField.getText();
+            String bathroomsFilterText = bathroomsFilterTextField.getText();
+            String bedroomsFilterText = bedroomsFilterTextField.getText();
 
-            Predicate<DwellingInfo> filterPredicate = dwelling ->
-                    dwelling.getPriceOrRent() <= priceFilter
-                            && dwelling.getBathrooms() >= bathroomsFilter
-                            && dwelling.getBedrooms() >= bedroomsFilter;
+            boolean hasPriceFilter = !priceFilterText.isEmpty();
+            boolean hasBathroomsFilter = !bathroomsFilterText.isEmpty();
+            boolean hasBedroomsFilter = !bedroomsFilterText.isEmpty();
 
-            FilteredList<DwellingInfo> filteredList = new FilteredList<>(FXCollections.observableList(new ArrayList<>(dwellingsDeque)));
-            filteredList.predicateProperty().bind(Bindings.createObjectBinding(() -> filterPredicate, priceFilterTextField.textProperty(), bathroomsFilterTextField.textProperty(), bedroomsFilterTextField.textProperty()));
+            List<DwellingInfo> filteredList = new ArrayList<>();
 
-            table.setItems(filteredList);
+            for (DwellingInfo dwelling : dwellingsDeque) {
+                boolean matchesPrice = !hasPriceFilter || dwelling.getPriceOrRent() <= Double.parseDouble(priceFilterText);
+                boolean matchesBathrooms = !hasBathroomsFilter || dwelling.getBathrooms() >= Double.parseDouble(bathroomsFilterText);
+                boolean matchesBedrooms = !hasBedroomsFilter || dwelling.getBedrooms() >= Integer.parseInt(bedroomsFilterText);
+
+                if (matchesPrice && matchesBathrooms && matchesBedrooms) {
+                    filteredList.add(dwelling);
+                }
+            }
+
+            table.setItems(FXCollections.observableList(filteredList));
         });
 
 
@@ -427,7 +469,7 @@ public class HouseComparison extends Application {
         HBox buttonBox = new HBox(10, addButton, editButton, deleteButton);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
 
-        HBox filterBox = new HBox(10, new Label("Price:"), priceFilterTextField, new Label("Bathrooms:"), bathroomsFilterTextField, new Label("Bedrooms:"), bedroomsFilterTextField, filterButton);
+        HBox filterBox = new HBox(10, new Label("Price (<=):"), priceFilterTextField, new Label("Bathrooms (>=):"), bathroomsFilterTextField, new Label("Bedrooms (>=):"), bedroomsFilterTextField, filterButton);
         filterBox.setAlignment(Pos.CENTER);
         filterBox.setPadding(new Insets(10));
 
