@@ -1,28 +1,28 @@
-public class BinarySearchTree {
-    private Node root;
+public class BinarySearchTree<T extends Comparable<T>> {
+    private Node<T> root;
 
-    private class Node {
-        DwellingInfo data;
-        Node left;
-        Node right;
+    private static class Node<T>   {
+        private T data;
+        private Node<T> left;
+        private Node<T> right;
 
-        public Node(DwellingInfo data) {
+        public Node(T data){
             this.data = data;
-            left = null;
-            right = null;
+            this.left = null;
+            this.right = null;
         }
     }
 
-    public void insert(DwellingInfo data) {
+    public void insert(T data) {
         root = insert(root, data);
     }
 
-    private Node insert(Node node, DwellingInfo data) {
+    private Node<T> insert(Node<T> node, T data) {
         if (node == null) {
-            return new Node(data);
+            return new Node<>(data);
         }
 
-        if (data.getPriceOrRent() < node.data.getPriceOrRent()) {
+        if (data.compareTo(node.data) < 0) {
             node.left = insert(node.left, data);
         } else {
             node.right = insert(node.right, data);
@@ -31,17 +31,17 @@ public class BinarySearchTree {
         return node;
     }
 
-    public DwellingInfo search(double value) {
-        Node node = search(root, value);
+    public T search(T value) {
+        Node<T> node = search(root, value);
         return node == null ? null : node.data;
     }
 
-    private Node search(Node node, double value) {
-        if (node == null || node.data.getPriceOrRent() == value) {
+    private Node<T> search(Node<T> node, T value) {
+        if (node == null || node.data.equals(value)) {
             return node;
         }
 
-        if (value < node.data.getPriceOrRent()) {
+        if (value.compareTo(node.data) < 0) {
             return search(node.left, value);
         } else {
             return search(node.right, value);

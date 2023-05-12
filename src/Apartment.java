@@ -1,6 +1,6 @@
 import javafx.beans.property.*;
 
-public class Apartment extends DwellingInfo {
+public class Apartment extends DwellingInfo implements Comparable<Apartment>{
     private final DoubleProperty rent;
 
     public Apartment(String address, double rent, int bedrooms, double bathrooms) {
@@ -23,5 +23,10 @@ public class Apartment extends DwellingInfo {
     @Override
     public double getPriceOrRent() {
         return getRent();
+    }
+
+    @Override
+    public int compareTo(Apartment other)   {
+        return Double.compare(this.getRent(), other.getRent());
     }
 }

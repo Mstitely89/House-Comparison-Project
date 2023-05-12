@@ -7,10 +7,11 @@
 // **********************************************************************************
 
 
-
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.collections.FXCollections;
+import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -25,28 +26,32 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 
 public class HouseComparison extends Application {
 
     private static Deque<DwellingInfo> dwellingsDeque = new LinkedList<>();
     private static BinarySearchTree bst = new BinarySearchTree();
+    private static ExecutorService executorService = Executors.newFixedThreadPool(2);
+    private static final Object lock = new Object();
 
 
     // Define loadHouses()
     private static void loadHouses() {
-        if (!dwellingsDeque.isEmpty()) {
-            // List has already been loaded, so do nothing
-            return;
-        }
         File file = new File("dwellings.txt");
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             int lineNumber = 1;
+            Deque<DwellingInfo> tempDwellingsDeque = new LinkedList<>();
+            BinarySearchTree tempBst = new BinarySearchTree();
+
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts.length != 5) {
-                    System.err.println("Invalid format on line " + lineNumber + ": expected 6 fields, found " + parts.length);
+                    System.err.println("Invalid format on line " + lineNumber + ": expected 5 fields, found " + parts.length);
                 } else {
                     try {
                         String dwellingType = parts[0];
@@ -57,18 +62,24 @@ public class HouseComparison extends Application {
 
                         if (dwellingType.equalsIgnoreCase("House")) {
                             House house = new House(address, priceOrRent, bedrooms, bathrooms);
-                            dwellingsDeque.add(house);
-                            bst.insert(house);
+                            tempDwellingsDeque.add(house);
+                            tempBst.insert(house);
                         } else if (dwellingType.equalsIgnoreCase("Apartment")) {
                             Apartment apartment = new Apartment(address, priceOrRent, bedrooms, bathrooms);
-                            dwellingsDeque.add(apartment);
-                            bst.insert(apartment);
+                            tempDwellingsDeque.add(apartment);
+                            tempBst.insert(apartment);
                         }
                     } catch (NumberFormatException e) {
                         System.err.println("Invalid number format on line " + lineNumber + ": " + e.getMessage());
                     }
                 }
                 lineNumber++;
+            }
+
+            // Update the main variables within a synchronized block
+            synchronized (lock) {
+                dwellingsDeque = tempDwellingsDeque;
+                bst = tempBst;
             }
         } catch (FileNotFoundException e) {
             System.err.println("File not found, starting with an empty list of dwellings.");
@@ -78,18 +89,20 @@ public class HouseComparison extends Application {
     }
 
     // Define saveHouses()
-    private void saveHouses() {
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter("dwellings.txt"));
-            for (DwellingInfo dwelling : dwellingsDeque) {
-                String dwellingType = dwelling instanceof House ? "House" : "Apartment";
-                String line = dwellingType + "," + dwelling.getAddress() + "," + dwelling.getPriceOrRent() + "," + dwelling.getBedrooms() + "," + dwelling.getBathrooms();
-                writer.write(line);
-                writer.newLine();
+    private static void saveHouses() {
+        synchronized (lock) {
+            File file = new File("dwellings.txt");
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                for (DwellingInfo dwelling : dwellingsDeque) {
+                    String dwellingType = dwelling instanceof House ? "House" : "Apartment";
+                    String line = dwellingType + "," + dwelling.getAddress() + "," + dwelling.getPriceOrRent() + "," + dwelling.getBedrooms() + "," + dwelling.getBathrooms();
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                System.err.println("Error saving houses to file: " + e.getMessage());
             }
-            writer.close();
-        } catch (IOException e) {
-            System.err.println("Error saving houses to file: " + e.getMessage());
         }
     }
 
@@ -325,7 +338,7 @@ public class HouseComparison extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        loadHouses();
+        //loadHouses();
         quickSort(dwellingsDeque, 0, dwellingsDeque.size() - 1);
 
         TableView<DwellingInfo> table = new TableView<>(FXCollections.observableList(new ArrayList<>(dwellingsDeque)));
@@ -336,6 +349,12 @@ public class HouseComparison extends Application {
         TableColumn<DwellingInfo, Number> rentColumn = new TableColumn<>("Rent");
         TableColumn<DwellingInfo, Number> bedroomsColumn = new TableColumn<>("Bedrooms");
         TableColumn<DwellingInfo, Number> bathroomsColumn = new TableColumn<>("Bathrooms");
+
+        TextField priceFilterTextField = new TextField();
+        TextField bathroomsFilterTextField = new TextField();
+        TextField bedroomsFilterTextField = new TextField();
+
+        Button filterButton = new Button("Filter");
 
         addressColumn.setCellValueFactory(cellData -> cellData.getValue().addressProperty());
 
@@ -387,18 +406,43 @@ public class HouseComparison extends Application {
                     }
                 });
 
+        filterButton.setOnAction(event -> {
+            double priceFilter = Double.parseDouble(priceFilterTextField.getText());
+            double bathroomsFilter = Double.parseDouble(bathroomsFilterTextField.getText());
+            int bedroomsFilter = Integer.parseInt(bedroomsFilterTextField.getText());
+
+            Predicate<DwellingInfo> filterPredicate = dwelling ->
+                    dwelling.getPriceOrRent() <= priceFilter
+                            && dwelling.getBathrooms() >= bathroomsFilter
+                            && dwelling.getBedrooms() >= bedroomsFilter;
+
+            FilteredList<DwellingInfo> filteredList = new FilteredList<>(FXCollections.observableList(new ArrayList<>(dwellingsDeque)));
+            filteredList.predicateProperty().bind(Bindings.createObjectBinding(() -> filterPredicate, priceFilterTextField.textProperty(), bathroomsFilterTextField.textProperty(), bedroomsFilterTextField.textProperty()));
+
+            table.setItems(filteredList);
+        });
+
+
+
         HBox buttonBox = new HBox(10, addButton, editButton, deleteButton);
         buttonBox.setAlignment(Pos.CENTER_RIGHT);
 
+        HBox filterBox = new HBox(10, new Label("Price:"), priceFilterTextField, new Label("Bathrooms:"), bathroomsFilterTextField, new Label("Bedrooms:"), bedroomsFilterTextField, filterButton);
+        filterBox.setAlignment(Pos.CENTER);
+        filterBox.setPadding(new Insets(10));
+
         BorderPane root = new BorderPane(table);
         root.setPadding(new Insets(10));
+        root.setCenter(table);
         root.setBottom(buttonBox);
+        root.setTop(filterBox);
 
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.setTitle("House Comparison");
         primaryStage.setOnCloseRequest(event -> {
             saveHouses();
+            executorService.shutdown();
             System.exit(0);
         });
         primaryStage.show();

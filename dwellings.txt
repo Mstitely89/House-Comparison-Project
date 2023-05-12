@@ -1,2 +1,3 @@
-House,123 West Main,545000.0,5,5.0
-House,456 East Main,561236.0,3,3.5
+House,123 Main,100.0,1,1.0
+House,789 Main,150.0,5,5.0
+House,456 Main,200.0,2,2.5
